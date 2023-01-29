@@ -1,0 +1,12 @@
+Package: DebiasedDoseResponse
+Title: Debiased inference for a covariate-adjusted regression function
+Version: 0.1.0
+Authors@R: Kenta Takatsu
+Description: Performs nonparametric estimation, point-wise and uniform inference on a covariate-adjusted regression function. Based on the paper "Debiased inference for a covariate-adjusted regression function"
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Suggests: testthat (>= 3.1.2)
+Config/testthat/edition: 3
