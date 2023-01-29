@@ -40,9 +40,10 @@
 #' @return
 #'
 #'
-#' @examples
+#' @examples TODO
+#' @export
 
-Debiased_inference <- function(Y, A, W, mu, g, tau=1, eval.pts=NULL,
+debiased_inference <- function(Y, A, W, mu, g, tau=1, eval.pts=NULL,
                                kernel.type="epa", bw.seq=NULL){
   require(nprobust)
   # compute an estimated pseudo-outcome sequence
