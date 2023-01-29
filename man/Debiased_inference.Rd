@@ -2,7 +2,8 @@
 % Please edit documentation in R/debiased_regression.R
 \name{Debiased_inference}
 \alias{Debiased_inference}
-\title{Title}
+\title{Compute debiased nonparametric inference for a covariate-adjusted regression
+function.}
 \usage{
 Debiased_inference(
   Y,
@@ -10,20 +11,43 @@ Debiased_inference(
   W,
   mu,
   g,
-  bw.seq = NULL,
-  eval.pts = NULL,
   tau = 1,
-  kernel.type = "epa"
+  eval.pts = NULL,
+  kernel.type = "epa",
+  bw.seq = NULL
 )
 }
 \arguments{
 \item{Y}{\code{n x 1} numeric vector of observed outcome values.}
 
-\item{kernel.type}{}
+\item{A}{\code{n x 1} numeric vector of observed exposure values.}
+
+\item{W}{\code{n x p} data.frame of potential confounders.}
+
+\item{mu}{outcome regression function (takes A and W and returns R)}
+
+\item{g}{standardized propensity function (takes A and W and returns R)}
+
+\item{tau}{the ratio of two parameters h/b}
+
+\item{eval.pts}{the list of points to run inference on. the default is
+30 equi-distant points from the 5th and 95th percentile of the exposure values}
+
+\item{kernel.type}{the type of kernel functions. The options are "uni" (Uniform),
+"tri" (Triangular), "gau" (Gaussian), and "epa" (epanechnikov).
+The default is "epa".}
+
+\item{bw.seq}{the choice of bandwidths. suppressed unless leave-one-out
+cross-validation is selected.}
 }
 \value{
 
 }
 \description{
-Title
+This function performs nonparametric inference on the causal dose-response
+curve associated with continuous exposure. It performs both
+pointwise and uniform inference. The resulting confidence intervals and
+confidence bands attain asymptotically valid coverage without undersmoothing
+subject to technical conditions.
+See the accompanying paper for details.
 }
