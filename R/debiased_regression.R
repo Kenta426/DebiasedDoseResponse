@@ -40,7 +40,13 @@
 #' @return
 #'
 #'
-#' @examples TODO
+#' @examples
+#' # Sample data
+#' n <- 1000
+#' W <- data.frame(W1 = runif(n))
+#' Z <- rbinom(n, size = 1, prob = 1/(1 + exp(2-W$W1)))
+#' A <- (1-Z) * rnorm(n, mean = W$W1, sd = abs(1 + W$W1))
+#' Y <- rexp(n, rate = 1+abs(W$W1 * A))
 #' @export
 
 debiased_inference <- function(Y, A, W, mu, g, tau=1, eval.pts=NULL,
