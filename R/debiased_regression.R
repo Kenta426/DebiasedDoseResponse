@@ -147,7 +147,8 @@ debiased_inference <- function(Y, A, W, mu, g, tau=1, eval.pts=NULL, ...){
     ci.ul.unif=ci.ul.u,
     ci.ll.unif=ci.ll.u,
     bias=est.res[,"b.hat"],
-    if.val=rif.se)
+    if.val=rif.se,
+    unif.if.val=ep.unif.quant)
   res$h <- h.opt; res$b <- b.opt
   return(res)
 }
