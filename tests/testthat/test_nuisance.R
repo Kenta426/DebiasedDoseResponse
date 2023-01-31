@@ -13,3 +13,11 @@ test_that("testing mu 1D", {
 })
 
 
+test_that("testing mu 1D", {
+  n <- 200; cols <- 3
+  W <- matrix(runif(n*cols), ncol = cols) # a 200 * 3 matrix of covariates
+  A <- rnorm(n, mean=W%*%rnorm(cols))     # a 200 * 1 vector of treatment variable
+  expect_error(.fit.density(A, W), NA)
+})
+
+

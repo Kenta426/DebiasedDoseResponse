@@ -29,7 +29,7 @@ test_that("testing pointwise inference with default args", {
   }
   g.hat <- function(a, w) g0(a, lambda(as.matrix(w), c(1,0)))
 
-  expect_error(debiased_inference(Y, A, W, mu.hat, g.hat), NA)
+  expect_error(debiased_inference(Y, A, W, mu=mu.hat, g=g.hat), NA)
 })
 
 test_that("testing pointwise inference with loocv", {
@@ -63,7 +63,7 @@ test_that("testing pointwise inference with loocv", {
   }
   g.hat <- function(a, w) g0(a, lambda(as.matrix(w), c(1,0)))
 
-  expect_error(debiased_inference(Y, A, W, mu.hat, g.hat,
+  expect_error(debiased_inference(Y, A, W, mu=mu.hat, g=g.hat,
                                   bandwidth.method="LOOCV"), NA)
 })
 
@@ -98,8 +98,16 @@ test_that("testing pointwise inference with loocv (h=b)", {
   }
   g.hat <- function(a, w) g0(a, lambda(as.matrix(w), c(1,0)))
 
-  expect_error(debiased_inference(Y, A, W, mu.hat, g.hat,
+  expect_error(debiased_inference(Y, A, W, mu=mu.hat, g=g.hat,
                                   bandwidth.method="LOOCV (h=b)"), NA)
 })
 
+test_that("testing pointwise inference with default args for simpler data", {
+  # sample problem
+  n <- 200; cols <- 3
+  W <- matrix(runif(n*cols), ncol = cols) # a 200 * 3 matrix of covariates
+  A <- rnorm(n, mean=W%*%rnorm(cols)) # a 200 * 1 vector of treatment variable
+  Y <- rnorm(n, mean = A^2 + rnorm(n)) # a 200 * 1 vector of response variable
+  expect_error(debiased_inference(Y, A, W), NA)
+})
 

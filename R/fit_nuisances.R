@@ -85,7 +85,8 @@ require("rpart")
   }else{
     U <- A
   }
-  g <- CD.SuperLearner(X=U, W=W, SL.library = SL.library, n.folds=5, n.bins=2:6) # TODO: Let people select folds and folds?
+  g <- CD.SuperLearner(X=U, W=W, SL.library = SL.library, n.folds=10,
+                       n.bins=2:floor(length(U)/50)) # TODO: Let people select folds and folds?
   g.hat <- function(x, w){
     w <- data.frame(w)
     names(w) <- names(w)

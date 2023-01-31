@@ -9,8 +9,6 @@ debiased_ate_inference(
   Y,
   A,
   W,
-  mu,
-  g,
   tau = 1,
   eval.pts.1 = NULL,
   eval.pts.2 = NULL,
@@ -23,10 +21,6 @@ debiased_ate_inference(
 \item{A}{\code{n x 1} numeric vector of observed exposure values.}
 
 \item{W}{\code{n x p} data.frame of potential confounders.}
-
-\item{mu}{outcome regression function (takes A and W and returns R)}
-
-\item{g}{standardized propensity function (takes A and W and returns R)}
 
 \item{tau}{the ratio of two parameters h/b}
 
@@ -54,6 +48,9 @@ See the accompanying paper for details.
 The following is a list of additional control parameters.
 
 \describe{
+\item{\code{mu}}{outcome regression function (takes A and W and returns R)}
+\item{\code{g}}{standardized propensity function
+(takes A and W and returns R)}.
 \item{\code{kernel.type}}{The choice of a kernel function. It must be one
 of the following: \code{epa} (epanechnikov), \code{tri} (triangular),
 \code{uni} (uniform) and \code{gau} (Gaussian). The default is \code{epa}.}
