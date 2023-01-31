@@ -48,9 +48,10 @@
 #' @examples
 #' # Sample data
 #' n <- 200; cols <- 3
-#' W <- matrix(runif(n*cols), ncol = cols) # a 200 * 3 matrix of covariates
-#' A <- rnorm(n, mean=W%*%rnorm(cols))     # a 200 * 1 vector of treatment variable
-#' Y <- rnorm(n, mean = A^2 + rnorm(n))    # a 200 * 1 vector of response variable
+#' W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
+#' A <- rnorm(n, mean=W%*%rnorm(cols))   # 200 * 1 vector of treatment variable
+#' Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+#' res <- debiased_inference(Y, A, W)
 #' @export
 
 debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
@@ -212,12 +213,12 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
 #' @export
 #'
 #' @examples
-#' #' # Sample data
-#' n <- 1000
-#' W <- data.frame(W1 = runif(n))
-#' Z <- rbinom(n, size = 1, prob = 1/(1 + exp(2-W$W1)))
-#' A <- (1-Z) * rnorm(n, mean = W$W1, sd = abs(1 + W$W1))
-#' Y <- rexp(n, rate = 1+abs(W$W1 * A))
+#' # Sample data
+#' n <- 200; cols <- 3
+#' W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
+#' A <- rnorm(n, mean=W%*%rnorm(cols))   # 200 * 1 vector of treatment variable
+#' Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+#' res <- debiased_ate_inference(Y, A, W)
 debiased_ate_inference <- function(Y, A, W, tau=1,
                                    eval.pts.1=NULL, eval.pts.2=NULL, ...){
   # Parse control inputs ------------------------------------------------------

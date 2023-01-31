@@ -69,10 +69,10 @@ The default value is \code{seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)} for
 }
 }
 \examples{
-#' # Sample data
-n <- 1000
-W <- data.frame(W1 = runif(n))
-Z <- rbinom(n, size = 1, prob = 1/(1 + exp(2-W$W1)))
-A <- (1-Z) * rnorm(n, mean = W$W1, sd = abs(1 + W$W1))
-Y <- rexp(n, rate = 1+abs(W$W1 * A))
+# Sample data
+n <- 200; cols <- 3
+W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
+A <- rnorm(n, mean=W\%*\%rnorm(cols))   # 200 * 1 vector of treatment variable
+Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+res <- debiased_ate_inference(Y, A, W)
 }
