@@ -11,8 +11,6 @@
 #' @param Y \code{n x 1} numeric vector of observed outcome values.
 #' @param A \code{n x 1} numeric vector of observed exposure values.
 #' @param W \code{n x p} data.frame of potential confounders.
-#' @param mu outcome regression function (takes A and W and returns R)
-#' @param g standardized propensity function (takes A and W and returns R)
 #' @param tau the ratio of two parameters h/b
 #' @param eval.pts the list of points to run inference on. the default is 30
 #' equi-distant points from the 5th and 95th percentile of the exposure values
@@ -20,6 +18,8 @@
 #' @details The following is a list of additional control parameters.
 #'
 #'\describe{
+#'   \item{\code{mu}}{outcome regression function (takes A and W and returns R)}
+#'   \item{\code{g}}{standardized propensity function (takes A and W and returns R)}
 #'   \item{\code{kernel.type}}{The choice of a kernel function. It must be one
 #'   of the following: \code{epa} (epanechnikov), \code{tri} (triangular),
 #'   \code{uni} (uniform) and \code{gau} (Gaussian). The default is \code{epa}.}
@@ -47,17 +47,31 @@
 #'
 #' @examples
 #' # Sample data
-#' n <- 1000
-#' W <- data.frame(W1 = runif(n))
-#' Z <- rbinom(n, size = 1, prob = 1/(1 + exp(2-W$W1)))
-#' A <- (1-Z) * rnorm(n, mean = W$W1, sd = abs(1 + W$W1))
-#' Y <- rexp(n, rate = 1+abs(W$W1 * A))
+#' n <- 200; cols <- 3
+#' W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
+#' A <- rnorm(n, mean=W%*%rnorm(cols))   # 200 * 1 vector of treatment variable
+#' Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+#' res <- debiased_inference(Y, A, W)
 #' @export
 
-debiased_inference <- function(Y, A, W, mu, g, tau=1, eval.pts=NULL, ...){
+debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   # Parse control inputs ------------------------------------------------------
   control <- .parse.debiased_inference(...)
   kernel.type <- control$kernel.type
+
+  # Compute a nuisance estimators if not provided -----------------------------
+  if(is.null(control$mu)){
+    mu <- .fit.regression(Y, A, W)
+  }
+  else{
+    mu <- control$mu
+  }
+  if(is.null(control$mu)){
+    g <- .fit.density(A, W)
+  }
+  else{
+    g <- control$g
+  }
 
   # Compute an estimated pseudo-outcome sequence ------------------------------
   ord <- order(A)
@@ -165,8 +179,6 @@ debiased_inference <- function(Y, A, W, mu, g, tau=1, eval.pts=NULL, ...){
 #' @param Y \code{n x 1} numeric vector of observed outcome values.
 #' @param A \code{n x 1} numeric vector of observed exposure values.
 #' @param W \code{n x p} data.frame of potential confounders.
-#' @param mu outcome regression function (takes A and W and returns R)
-#' @param g standardized propensity function (takes A and W and returns R)
 #' @param tau the ratio of two parameters h/b
 #' @param eval.pts.1 the list of points to run inference on theta(a1)-theta(a2),
 #' where this entry corresponds to a1. the default is 30 equi-distant points
@@ -178,6 +190,9 @@ debiased_inference <- function(Y, A, W, mu, g, tau=1, eval.pts=NULL, ...){
 #' @details The following is a list of additional control parameters.
 #'
 #'\describe{
+#'   \item{\code{mu}}{outcome regression function (takes A and W and returns R)}
+#'   \item{\code{g}}{standardized propensity function
+#'   (takes A and W and returns R)}.
 #'   \item{\code{kernel.type}}{The choice of a kernel function. It must be one
 #'   of the following: \code{epa} (epanechnikov), \code{tri} (triangular),
 #'   \code{uni} (uniform) and \code{gau} (Gaussian). The default is \code{epa}.}
@@ -198,13 +213,13 @@ debiased_inference <- function(Y, A, W, mu, g, tau=1, eval.pts=NULL, ...){
 #' @export
 #'
 #' @examples
-#' #' # Sample data
-#' n <- 1000
-#' W <- data.frame(W1 = runif(n))
-#' Z <- rbinom(n, size = 1, prob = 1/(1 + exp(2-W$W1)))
-#' A <- (1-Z) * rnorm(n, mean = W$W1, sd = abs(1 + W$W1))
-#' Y <- rexp(n, rate = 1+abs(W$W1 * A))
-debiased_ate_inference <- function(Y, A, W, mu, g, tau=1,
+#' # Sample data
+#' n <- 200; cols <- 3
+#' W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
+#' A <- rnorm(n, mean=W%*%rnorm(cols))   # 200 * 1 vector of treatment variable
+#' Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+#' res <- debiased_ate_inference(Y, A, W)
+debiased_ate_inference <- function(Y, A, W, tau=1,
                                    eval.pts.1=NULL, eval.pts.2=NULL, ...){
   # Parse control inputs ------------------------------------------------------
   control <- .parse.debiased_inference(...)
@@ -218,6 +233,20 @@ debiased_ate_inference <- function(Y, A, W, mu, g, tau=1,
   }
   if (length(eval.pts.2) == 1){
     eval.pts.2 <- rep(eval.pts.2, length(eval.pts.1))
+  }
+
+  # Compute a nuisance estimators if not provided -----------------------------
+  if(is.null(control$mu)){
+    mu <- .fit.regression(Y, A, W)
+  }
+  else{
+    mu <- control$mu
+  }
+  if(is.null(control$mu)){
+    g <- .fit.density(A, W)
+  }
+  else{
+    g <- control$g
   }
 
   # Estimate pseudo-outcome sequence ------------------------------------------

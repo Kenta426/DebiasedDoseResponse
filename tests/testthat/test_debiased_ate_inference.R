@@ -29,7 +29,7 @@ test_that("testing treatment effect inference with default argument", {
   }
   g.hat <- function(a, w) g0(a, lambda(as.matrix(w), c(1,0)))
 
-  expect_error(debiased_ate_inference(Y, A, W, mu.hat, g.hat), NA)
+  expect_error(debiased_ate_inference(Y, A, W, mu=mu.hat, g=g.hat), NA)
 })
 
 test_that("testing treatment effect inference with default argument 2", {
@@ -65,9 +65,10 @@ test_that("testing treatment effect inference with default argument 2", {
 
   eval.1 <- seq(quantile(A, 0.1), quantile(A, 0.9), length.out=10)
 
-  expect_error(debiased_ate_inference(Y, A, W, mu.hat, g.hat,
+  expect_error(debiased_ate_inference(Y, A, W,
                                       eval.pts.1=eval.1[-1],
-                                      eval.pts.2=eval.1[1]), NA)
+                                      eval.pts.2=eval.1[1],
+                                      mu=mu.hat, g=g.hat), NA)
 })
 
 test_that("testing treatment effect inference with LOOCV", {
@@ -103,9 +104,10 @@ test_that("testing treatment effect inference with LOOCV", {
 
   eval.1 <- seq(quantile(A, 0.1), quantile(A, 0.9), length.out=10)
 
-  expect_error(debiased_ate_inference(Y, A, W, mu.hat, g.hat,
+  expect_error(debiased_ate_inference(Y, A, W,
                                       eval.pts.1=eval.1[-1],
-                                      eval.pts.2=eval.1[1]), NA)
+                                      eval.pts.2=eval.1[1],
+                                      mu=mu.hat, g=g.hat), NA)
 })
 
 test_that("testing treatment effect inference with LOOCV", {
@@ -141,7 +143,8 @@ test_that("testing treatment effect inference with LOOCV", {
 
   eval.1 <- seq(quantile(A, 0.1), quantile(A, 0.9), length.out=10)
 
-  expect_error(debiased_ate_inference(Y, A, W, mu.hat, g.hat,
+  expect_error(debiased_ate_inference(Y, A, W,
+                                      mu=mu.hat, g=g.hat,
                                       eval.pts.1=eval.1[-1],
                                       eval.pts.2=eval.1[1],
                                       bandwidth.metho="LOOCV"), NA)
@@ -180,8 +183,11 @@ test_that("testing treatment effect inference with LOOCV(h=b)", {
 
   eval.1 <- seq(quantile(A, 0.1), quantile(A, 0.9), length.out=10)
 
-  expect_error(debiased_ate_inference(Y, A, W, mu.hat, g.hat,
+  expect_error(debiased_ate_inference(Y, A, W,
+                                      mu=mu.hat, g=g.hat,
                                       eval.pts.1=eval.1[-1],
                                       eval.pts.2=eval.1[1],
                                       bandwidth.metho="LOOCV(h=b)"), NA)
 })
+
+

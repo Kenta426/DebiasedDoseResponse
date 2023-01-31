@@ -73,5 +73,7 @@
   arg$alpha.unif <- alpha.unif
   arg$bw.seq <- option$bw.seq
   arg$bootstrap <- bootstrap
+  arg$mu <- option$mu
+  arg$g <- option$g
   return(arg)
 }

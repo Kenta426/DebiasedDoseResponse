@@ -5,7 +5,7 @@
 \title{Compute debiased nonparametric inference for a covariate-adjusted regression
 function.}
 \usage{
-debiased_inference(Y, A, W, mu, g, tau = 1, eval.pts = NULL, ...)
+debiased_inference(Y, A, W, tau = 1, eval.pts = NULL, ...)
 }
 \arguments{
 \item{Y}{\code{n x 1} numeric vector of observed outcome values.}
@@ -13,10 +13,6 @@ debiased_inference(Y, A, W, mu, g, tau = 1, eval.pts = NULL, ...)
 \item{A}{\code{n x 1} numeric vector of observed exposure values.}
 
 \item{W}{\code{n x p} data.frame of potential confounders.}
-
-\item{mu}{outcome regression function (takes A and W and returns R)}
-
-\item{g}{standardized propensity function (takes A and W and returns R)}
 
 \item{tau}{the ratio of two parameters h/b}
 
@@ -40,6 +36,8 @@ See the accompanying paper for details.
 The following is a list of additional control parameters.
 
 \describe{
+\item{\code{mu}}{outcome regression function (takes A and W and returns R)}
+\item{\code{g}}{standardized propensity function (takes A and W and returns R)}
 \item{\code{kernel.type}}{The choice of a kernel function. It must be one
 of the following: \code{epa} (epanechnikov), \code{tri} (triangular),
 \code{uni} (uniform) and \code{gau} (Gaussian). The default is \code{epa}.}
@@ -65,9 +63,9 @@ Gaussian Process in the uniform bands. The default value is 1e4.}
 }
 \examples{
 # Sample data
-n <- 1000
-W <- data.frame(W1 = runif(n))
-Z <- rbinom(n, size = 1, prob = 1/(1 + exp(2-W$W1)))
-A <- (1-Z) * rnorm(n, mean = W$W1, sd = abs(1 + W$W1))
-Y <- rexp(n, rate = 1+abs(W$W1 * A))
+n <- 200; cols <- 3
+W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
+A <- rnorm(n, mean=W\%*\%rnorm(cols))   # 200 * 1 vector of treatment variable
+Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+res <- debiased_inference(Y, A, W)
 }

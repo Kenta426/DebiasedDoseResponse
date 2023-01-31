@@ -9,8 +9,6 @@ debiased_ate_inference(
   Y,
   A,
   W,
-  mu,
-  g,
   tau = 1,
   eval.pts.1 = NULL,
   eval.pts.2 = NULL,
@@ -23,10 +21,6 @@ debiased_ate_inference(
 \item{A}{\code{n x 1} numeric vector of observed exposure values.}
 
 \item{W}{\code{n x p} data.frame of potential confounders.}
-
-\item{mu}{outcome regression function (takes A and W and returns R)}
-
-\item{g}{standardized propensity function (takes A and W and returns R)}
 
 \item{tau}{the ratio of two parameters h/b}
 
@@ -54,6 +48,9 @@ See the accompanying paper for details.
 The following is a list of additional control parameters.
 
 \describe{
+\item{\code{mu}}{outcome regression function (takes A and W and returns R)}
+\item{\code{g}}{standardized propensity function
+(takes A and W and returns R)}.
 \item{\code{kernel.type}}{The choice of a kernel function. It must be one
 of the following: \code{epa} (epanechnikov), \code{tri} (triangular),
 \code{uni} (uniform) and \code{gau} (Gaussian). The default is \code{epa}.}
@@ -72,10 +69,10 @@ The default value is \code{seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)} for
 }
 }
 \examples{
-#' # Sample data
-n <- 1000
-W <- data.frame(W1 = runif(n))
-Z <- rbinom(n, size = 1, prob = 1/(1 + exp(2-W$W1)))
-A <- (1-Z) * rnorm(n, mean = W$W1, sd = abs(1 + W$W1))
-Y <- rexp(n, rate = 1+abs(W$W1 * A))
+# Sample data
+n <- 200; cols <- 3
+W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
+A <- rnorm(n, mean=W\%*\%rnorm(cols))   # 200 * 1 vector of treatment variable
+Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+res <- debiased_ate_inference(Y, A, W)
 }
