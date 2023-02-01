@@ -44,13 +44,14 @@
 #'}
 #' @return
 #'
-#'
+#' @importFrom nprobust lpbwselect
+#' @import SuperLearner earth gam ranger rpart Rsolnp nnls
 #' @examples
 #' # Sample data
 #' n <- 200; cols <- 3
 #' W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
 #' A <- rnorm(n, mean=W%*%rnorm(cols))   # 200 * 1 vector of treatment variable
-#' Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+#' Y <- rnorm(n, mean=sin(A)+W%*%rnorm(cols))  # 200 * 1 vector of response variable
 #' res <- debiased_inference(Y, A, W)
 #' @export
 
@@ -115,7 +116,7 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
     b.opt <- bw.seq[which.min(risk)]
   }
   else{
-    h.opt <- nprobust::lpbwselect(pseudo.out, A, eval=eval.pts,
+    h.opt <- lpbwselect(pseudo.out, A, eval=eval.pts,
                                   bwselect="imse-dpi")$bws[,2]
     b.opt <- h.opt/tau
   }
@@ -211,13 +212,14 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
 #'}
 #' @return
 #' @export
-#'
+#' @importFrom nprobust lpbwselect
+#' @import SuperLearner earth gam ranger rpart Rsolnp nnls
 #' @examples
 #' # Sample data
 #' n <- 200; cols <- 3
 #' W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
 #' A <- rnorm(n, mean=W%*%rnorm(cols))   # 200 * 1 vector of treatment variable
-#' Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+#' Y <- rnorm(n, mean = sin(A)+W%*%rnorm(cols))  # 200 * 1 vector of response variable
 #' res <- debiased_ate_inference(Y, A, W)
 debiased_ate_inference <- function(Y, A, W, tau=1,
                                    eval.pts.1=NULL, eval.pts.2=NULL, ...){
@@ -272,8 +274,7 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
     risk <- mapply(function(h, b){
       .robust.loocv(A, pseudo.out, h, b, eval.pt=bw.eval,
                     kernel.type=kernel.type)}, bw.seq.h, bw.seq.b)
-    h.opt <- bw.seq.h[which.min(risk)]
-    b.opt <- bw.seq.b[which.min(risk)]
+    h.opt <- bw.seq.h[which.min(risk)]; b.opt <- bw.seq.b[which.min(risk)]
   }
   else if(control$bandwidth.method == "LOOCV(h=b)"){
     if (is.null(control$bw.seq)){
@@ -285,12 +286,11 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
     risk <- mapply(function(h, b){
       .robust.loocv(A, pseudo.out, h, b, eval.pt=bw.eval,
                     kernel.type=kernel.type)}, bw.seq, bw.seq)
-    h.opt <- bw.seq[which.min(risk)]
-    b.opt <- bw.seq[which.min(risk)]
+    h.opt <- bw.seq[which.min(risk)]; b.opt <- bw.seq[which.min(risk)]
   }
   else{
-    h.opt <- nprobust::lpbwselect(pseudo.out, A, eval=bw.eval,
-                                  bwselect="imse-dpi")$bws[,2]
+    h.opt <- lpbwselect(pseudo.out, A, eval=bw.eval,
+                        bwselect="imse-dpi")$bws[,2]
     b.opt <- h.opt/tau
   }
 

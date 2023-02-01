@@ -1,9 +1,3 @@
-require("SuperLearner")
-require("earth")
-require("gam")
-require("ranger")
-require("rpart")
-
 .fit.regression <- function(Y, A, W,
                            SL.library = c("SL.mean", "SL.earth", "SL.gam",
                                           "SL.rpart", "SL.glm"),
