@@ -73,6 +73,6 @@ The default value is \code{seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)} for
 n <- 200; cols <- 3
 W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
 A <- rnorm(n, mean=W\%*\%rnorm(cols))   # 200 * 1 vector of treatment variable
-Y <- rnorm(n, mean = A^2 + rnorm(n))  # 200 * 1 vector of response variable
+Y <- rnorm(n, mean = sin(A)+W\%*\%rnorm(cols))  # 200 * 1 vector of response variable
 res <- debiased_ate_inference(Y, A, W)
 }

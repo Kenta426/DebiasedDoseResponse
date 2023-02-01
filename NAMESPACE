@@ -2,3 +2,11 @@
 
 export(debiased_ate_inference)
 export(debiased_inference)
+import(Rsolnp)
+import(SuperLearner)
+import(earth)
+import(gam)
+import(nnls)
+import(ranger)
+import(rpart)
+importFrom(nprobust,lpbwselect)
