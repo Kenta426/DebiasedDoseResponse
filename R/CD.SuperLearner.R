@@ -61,7 +61,7 @@
 #     A "meta" super learner is used to combine the location-scale
 #     method and all of the bin methods to a single estimate.
 
-CD.SuperLearner <- function(X, W, SL.library, n.folds=5,
+CD.SuperLearner <- function(X, W, SL.library, n.folds=10,
                             n.bins=2:floor(length(X)/50),
                             verbose=FALSE, save.threshold=.001) {
   n <- length(X)

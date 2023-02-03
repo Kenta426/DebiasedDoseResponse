@@ -12,7 +12,6 @@ test_that("testing mu 1D", {
   expect_error(.fit.regression(Y, X, W), NA)
 })
 
-
 test_that("testing mu 1D", {
   n <- 200; cols <- 3
   W <- matrix(runif(n*cols), ncol = cols) # a 200 * 3 matrix of covariates

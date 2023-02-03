@@ -77,3 +77,43 @@
   arg$g <- option$g
   return(arg)
 }
+
+
+#' Title
+#'
+#' @param res.df
+#' @param ci
+#' @param unif
+#'
+#' @return
+#' @export
+#' @import ggplot2
+#' @examples
+plot_debiased_curve <- function(res.df, ci=TRUE, unif=TRUE){
+  p <- ggplot2::ggplot(res.df) +
+    ggplot2::geom_line(aes(x=eval.pts, y=theta)) +
+    ggplot2::xlab("Exposure") +
+    ggplot2::ylab("Covariate-adjusted outcome") +
+    ggplot2::theme_minimal()
+
+  if(ci){
+    p <- p + ggplot2::geom_pointrange(aes(x=eval.pts, y=theta,
+                                     ymin=ci.ll.pts,
+                                     ymax=ci.ul.pts,
+                                     size="Pointwise CIs")) +
+      ggplot2::scale_size_manual("",values=c("Pointwise CIs"=0.2))
+  }
+  if(unif){
+    p <- p + ggplot2::geom_line(aes(x=eval.pts,
+                                    y=ci.ll.unif,
+                                    linetype="Uniform band")) +
+             ggplot2::geom_line(aes(x=eval.pts,
+                                    y=ci.ul.unif,
+                                    linetype="Uniform band"))+
+      ggplot2::scale_linetype_manual("",values=c("Uniform band"=2))
+  }
+  p <- p + ggplot2::theme(legend.position = "bottom")
+  return(p)
+}
+
+
