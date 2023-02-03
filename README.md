@@ -23,7 +23,6 @@ p <- plot_debiased_curve(est.res)
 p + geom_line(aes(x=eval.pts, y=sin(eval.pts*2)+1/2), color="coral")
 ```
 
-
 <p align="center">
-![](figs/demo1.png)
+  <img src="https://github.com/Kenta426/DebiasedDoseResponse/blob/main/figs/demo1.png" />
 </p>
