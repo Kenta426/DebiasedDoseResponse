@@ -16,14 +16,40 @@ To install this `R` package, first install the `devtools` package. Then type:
 set.seed(10000)
 library(DebiasedDoseResponse)
 n <- 500; cols <- 3
-W <- matrix(runif(n*cols), ncol = cols) # a 200 * 3 matrix of covariates
-A <- rnorm(n, mean=W%*%rnorm(cols)) # a 200 * 1 vector of treatment variable
-Y <- rnorm(n, mean = sin(2*A)+W[,1]) # a 200 * 1 vector of response variable
-est.res <- debiased_inference(Y, A, W)
-p <- plot_debiased_curve(est.res)
-p + geom_line(aes(x=eval.pts, y=sin(eval.pts*2)+1/2), color="coral")
+W <- matrix(runif(n*cols), ncol = cols)   # a 200 * 3 matrix of covariates
+A <- rnorm(n, mean=W%*%rnorm(cols))       # a 200 * 1 vector of treatment variable
+Y <- rnorm(n, mean = sin(2*A)+W[,1])      # a 200 * 1 vector of response variable
+est.res <- debiased_inference(Y, A, W)    # compute debiased local linear 
+p <- plot_debiased_curve(est.res)         # plot debiased local linear 
+
+# compute true covariate-adjusted regression by integrating W
+g <- function(a){
+  points <- function(a0){
+    integrate(function(t){sin(2*a0)+t}, lower=0, upper=1)$value}
+  sapply(a, points)
+}
+# plot true covariate-adjusted regression in coral
+p + geom_line(aes(x=eval.pts, y=g(eval.pts)), color="coral")
 ```
 
 <p align="center">
   <img src="https://github.com/Kenta426/DebiasedDoseResponse/blob/main/figs/demo1.png" />
+</p>
+
+
+```r
+Y <- rnorm(n, mean = sin(2*A*W[,1])) 
+est.res <- debiased_inference(Y, A, W)
+p <- plot_debiased_curve(est.res)
+
+# compute true covariate-adjusted regression by integrating W
+g <- function(a){
+  points <- function(a0){
+    integrate(function(t){sin(2*a0*t)}, lower=0, upper=1)$value}
+  sapply(a, points)
+}
+p + geom_line(aes(x=eval.pts, y=g(eval.pts)), color="coral")
+```
+<p align="center">
+  <img src="https://github.com/Kenta426/DebiasedDoseResponse/blob/main/figs/demo2.png" />
 </p>
