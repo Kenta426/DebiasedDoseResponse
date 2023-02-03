@@ -14,6 +14,7 @@ To install this `R` package, first install the `devtools` package. Then type:
 
 ```r
 set.seed(10000)
+library(DebiasedDoseResponse)
 n <- 500; cols <- 3
 W <- matrix(runif(n*cols), ncol = cols) # a 200 * 3 matrix of covariates
 A <- rnorm(n, mean=W%*%rnorm(cols)) # a 200 * 1 vector of treatment variable
