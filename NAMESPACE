@@ -2,7 +2,7 @@
 
 export(debiased_ate_inference)
 export(debiased_inference)
-export(plot_curve)
+export(plot_debiased_curve)
 import(Rsolnp)
 import(SuperLearner)
 import(earth)

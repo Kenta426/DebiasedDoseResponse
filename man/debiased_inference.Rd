@@ -66,6 +66,6 @@ Gaussian Process in the uniform bands. The default value is 1e4.}
 n <- 200; cols <- 3
 W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
 A <- rnorm(n, mean=W\%*\%rnorm(cols))   # 200 * 1 vector of treatment variable
-Y <- rnorm(n, mean=sin(A)+W\%*\%rnorm(cols))  # 200 * 1 vector of response variable
+Y <- rnorm(n, mean=sin(A)+W\%*\%rnorm(cols))  # 200 * 1 vector of response
 res <- debiased_inference(Y, A, W)
 }

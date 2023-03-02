@@ -51,7 +51,7 @@
 #' n <- 200; cols <- 3
 #' W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
 #' A <- rnorm(n, mean=W%*%rnorm(cols))   # 200 * 1 vector of treatment variable
-#' Y <- rnorm(n, mean=sin(A)+W%*%rnorm(cols))  # 200 * 1 vector of response variable
+#' Y <- rnorm(n, mean=sin(A)+W%*%rnorm(cols))  # 200 * 1 vector of response
 #' res <- debiased_inference(Y, A, W)
 #' @export
 
@@ -61,14 +61,18 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   kernel.type <- control$kernel.type
 
   # Compute a nuisance estimators if not provided -----------------------------
+  # This is the most time consuming component of the entire algorithm.
+  # When sample size or dimension of W is large, it is recommended to specify
+  # nuisance functions as the optional argument otherwise this code will fit
+  # SuperLearner every time.
   if(is.null(control$mu)){
-    mu <- .fit.regression(Y, A, W)
+    mu <- .fit.regression(Y, A, W)  # See fit_nuisances.R for details
   }
   else{
     mu <- control$mu
   }
   if(is.null(control$mu)){
-    g <- .fit.density(A, W)
+    g <- .fit.density(A, W) # See fit_nuisances.R for details
   }
   else{
     g <- control$g
@@ -77,7 +81,7 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   # Compute an estimated pseudo-outcome sequence ------------------------------
   ord <- order(A)
   Y <- Y[ord]; W <- W[ord,]; A <- A[ord]; n <- length(A)
-  pseudo.res <- .pseudo.outcomes(Y, A, W, mu, g)
+  pseudo.res <- .pseudo.outcomes(Y, A, W, mu, g)  # See helper.R for details
   pseudo.out <- pseudo.res$pseudo.outcome
   muhat.mat <- pseudo.res$muhat.mat
   mhat.obs <- pseudo.res$mhat.obs
@@ -87,6 +91,8 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   }
 
   # Compute bandwidth ---------------------------------------------------------
+  # Use so-called "Hat matrix trick" of a linear smoother to run leave-one-out
+  # Cross-validation in linear time
   if(control$bandwidth.method == "LOOCV"){
     if (is.null(control$bw.seq)){
       bw.seq <- seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)
@@ -97,6 +103,7 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
     bw.seq.h <- rep(bw.seq, length(bw.seq))
     bw.seq.b <- rep(bw.seq, each=length(bw.seq))
     risk <- mapply(function(h, b){
+      # See bandwidth.R for details
       .robust.loocv(A, pseudo.out, h, b, eval.pt=eval.pts,
                     kernel.type=kernel.type)}, bw.seq.h, bw.seq.b)
     h.opt <- bw.seq.h[which.min(risk)]
@@ -110,23 +117,29 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
       bw.seq <- control$bw.seq
     }
     risk <- mapply(function(h, b){
+      # See bandwidth.R for details
       .robust.loocv(A, pseudo.out, h, b, eval.pt=eval.pts,
                     kernel.type=kernel.type)}, bw.seq, bw.seq)
     h.opt <- bw.seq[which.min(risk)]
     b.opt <- bw.seq[which.min(risk)]
   }
   else{
+    # lpbwselect is implemented by nprobust library.
+    # This bandwidth selection algorithm optimizes for the (estimate of)
+    # integrated MSE.
     h.opt <- lpbwselect(pseudo.out, A, eval=eval.pts,
                                   bwselect="imse-dpi")$bws[,2]
     b.opt <- h.opt/tau
   }
 
   # Fit debiased local linear regression --------------------------------------
+  # See local_polynomial.R for details
   est.res <- .lprobust(A, pseudo.out, h.opt, b.opt,
                        eval=eval.pts, kernel.type=kernel.type)
 
   # Estimate influence function sequence --------------------------------------
   rinf.fns <- mapply(function(a, h.val, b.val){
+    # See influence_functions.R for details
     .compute.rinfl.func(pseudo.out, A, a, h.val, b.val, kern,
                         muhat.mat, mhat.obs)
   }, eval.pts, h.opt, b.opt)
@@ -219,7 +232,7 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
 #' n <- 200; cols <- 3
 #' W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
 #' A <- rnorm(n, mean=W%*%rnorm(cols))   # 200 * 1 vector of treatment variable
-#' Y <- rnorm(n, mean = sin(A)+W%*%rnorm(cols))  # 200 * 1 vector of response variable
+#' Y <- rnorm(n, mean = sin(A)+W%*%rnorm(cols))  # 200 * 1 vector of response
 #' res <- debiased_ate_inference(Y, A, W)
 debiased_ate_inference <- function(Y, A, W, tau=1,
                                    eval.pts.1=NULL, eval.pts.2=NULL, ...){
@@ -239,13 +252,13 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
 
   # Compute a nuisance estimators if not provided -----------------------------
   if(is.null(control$mu)){
-    mu <- .fit.regression(Y, A, W)
+    mu <- .fit.regression(Y, A, W) # See fit_nuisances.R for details
   }
   else{
     mu <- control$mu
   }
   if(is.null(control$mu)){
-    g <- .fit.density(A, W)
+    g <- .fit.density(A, W) # See fit_nuisances.R for details
   }
   else{
     g <- control$g
@@ -254,7 +267,7 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
   # Estimate pseudo-outcome sequence ------------------------------------------
   ord <- order(A)
   Y <- Y[ord]; W <- W[ord,]; A <- A[ord]; n <- length(A)
-  pseudo.res <- .pseudo.outcomes(Y, A, W, mu, g)
+  pseudo.res <- .pseudo.outcomes(Y, A, W, mu, g) # See helper.R for details
   pseudo.out <- pseudo.res$pseudo.outcome
   muhat.mat <- pseudo.res$muhat.mat
   mhat.obs <- pseudo.res$mhat.obs
@@ -272,6 +285,7 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
     bw.seq.h <- rep(bw.seq, length(bw.seq))
     bw.seq.b <- rep(bw.seq, each=length(bw.seq))
     risk <- mapply(function(h, b){
+      # See bandwidth.R for details
       .robust.loocv(A, pseudo.out, h, b, eval.pt=bw.eval,
                     kernel.type=kernel.type)}, bw.seq.h, bw.seq.b)
     h.opt <- bw.seq.h[which.min(risk)]; b.opt <- bw.seq.b[which.min(risk)]
@@ -284,17 +298,22 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
       bw.seq <- control$bw.seq
     }
     risk <- mapply(function(h, b){
+      # See bandwidth.R for details
       .robust.loocv(A, pseudo.out, h, b, eval.pt=bw.eval,
                     kernel.type=kernel.type)}, bw.seq, bw.seq)
     h.opt <- bw.seq[which.min(risk)]; b.opt <- bw.seq[which.min(risk)]
   }
   else{
+    # lpbwselect is implemented by nprobust library.
+    # This bandwidth selection algorithm optimizes for the (estimate of)
+    # integrated MSE.
     h.opt <- lpbwselect(pseudo.out, A, eval=bw.eval,
                         bwselect="imse-dpi")$bws[,2]
     b.opt <- h.opt/tau
   }
 
   # Fit debiased local linear regression --------------------------------------
+  # See local_polynomial.R for details
   est.res.1 <- .lprobust(A, pseudo.out, h.opt, b.opt,
                          eval=eval.pts.1, kernel.type=kernel.type)
   est.res.2 <- .lprobust(A, pseudo.out, h.opt, b.opt,
@@ -303,6 +322,7 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
   # Estimate influence function sequence --------------------------------------
   kern <- function(t){.kern(t, kernel=kernel.type)}
   inf.cov <- mapply(function(a1.val, a2.val, h.val, b.val){
+    # See influence_functions.R for details
     .compute.rinfl.func(pseudo.out, A, a1.val, h.val, b.val,
                        kern, muhat.mat, mhat.obs)-
       .compute.rinfl.func(pseudo.out, A, a2.val, h.val, b.val,

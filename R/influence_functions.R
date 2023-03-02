@@ -1,4 +1,29 @@
-# Compute influence function values for a debiased local linear regression
+# File: influence_function.R
+# Author: Kenta Takatsu
+# Description:
+#   Two functions in this file corresponds to the influence functions
+#   for debiased local linear estimators and local linear estimators.
+# References:
+#   Takatsu K., and Westling T., (2023).
+#   "Debiased inference for a covariate-adjusted regression function"
+#   Kennedy EH., Ma Z., McHugh MD, Small DS (2017).
+#   "Nonparametric methods for doubly robust estimation of
+#   continuous treatment effects"
+
+# Function 1: .compute.rinfl.func
+# Purpose:
+#   Compute the estimate of influence function sequence for debiased local
+#   linear estimator of pseudo-outcome sequences.
+# Arguments:
+#   Y:
+#   A:
+#   a:
+#   h:
+#   b:
+#   kern:
+#   muhat.mat:
+#   mhat.obs:
+# Output: [Brief description of output]
 .compute.rinfl.func <- function(Y, A, a, h, b, kern, muhat.mat, mhat.obs){
 
   n <- length(A); bw.min <- sort(abs(A - a))[21]
