@@ -15,6 +15,7 @@ To install this `R` package, first install the `devtools` package. Then type:
 ```r
 set.seed(10000)
 library(DebiasedDoseResponse)
+library(ggplot2)
 
 n <- 500; cols <- 3
 W <- matrix(runif(n*cols), ncol = cols)   # a 200 * 3 matrix of covariates
