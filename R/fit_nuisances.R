@@ -1,6 +1,8 @@
 .fit.regression <- function(Y, A, W,
-                           SL.library = c("SL.mean", "SL.earth", "SL.gam",
-                                          "SL.rpart", "SL.glm"),
+                            SL.library=c("SL.earth","SL.gam",
+                                         "SL.glm","SL.glmnet",
+                                         "SL.glm.interaction",
+                                         "SL.mean","SL.ranger"),
                            cdf = TRUE){
   W <- data.frame(W)
   n <- length(A)
@@ -66,6 +68,36 @@
     return(mu.preds)
   }
   return(mu.hat)
+}
+
+.fit.semiparametric.density <- function(A, W,
+                                        SL.library=c("SL.earth","SL.gam",
+                                                     "SL.glm","SL.glmnet",
+                                                     "SL.glm.interaction",
+                                                     "SL.mean","SL.ranger")){
+  # following Edward's implementation of semi-parametric density estimation.
+  pimod <- SuperLearner(Y = A, X = data.frame(W), SL.library = SL.library)
+  pimod.vals <- pimod$SL.predict
+  pi2mod <- SuperLearner(Y = (A - pimod.vals)^2, X = data.frame(W),
+                         SL.library = SL.library)
+  pi2mod.vals <- pi2mod$SL.predict
+  a.std <- (A - pimod.vals)/sqrt(pi2mod.vals)
+  density.est <- density(a.std)
+  conditional.density <- approxfun(density.est$x, density.est$y)
+  get.pi <- function(a0, w0){
+    pred.mean <- predict(pimod, data.frame(w0))$pred
+    pred.var <- predict(pi2mod, data.frame(w0))$pred
+    a.std.pred <- (a0 - pred.mean)/sqrt(pred.var)
+    conditional.density(a.std.pred)
+  }
+  a.std <- (A - mean(A))/sd(A)
+  density.est <- density(a.std)
+  marginal.density <- approxfun(density.est$x, density.est$y)
+  get.marginal <- function(a){
+    a.std.pred <- (a - mean(A))/sd(A)
+    marginal.density(a.std.pred)
+  }
+  function(a0, w0) get.pi(a0, w0)/get.marginal(a0)
 }
 
 .fit.density <- function(A, W, SL.library=c("SL.mean", "SL.earth", "SL.gam",

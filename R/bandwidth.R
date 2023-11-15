@@ -50,3 +50,48 @@
   # Compute the estimate of LOOCV risk ----------------------------------------
   mean(((y - est.fn) / (1 - hat.val))^2, na.rm=TRUE)
 }
+
+
+.bandwidth.selection <- function(pseudo.out, A, eval.pts, control){
+  n <- length(A)
+  if(control$bandwidth.method == "LOOCV"){
+    if (is.null(control$bw.seq)){
+      bw.seq <- seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)
+    }
+    else{
+      bw.seq <- control$bw.seq
+    }
+    bw.seq.h <- rep(bw.seq, length(bw.seq))
+    bw.seq.b <- rep(bw.seq, each=length(bw.seq))
+    risk <- mapply(function(h, b){
+      # See bandwidth.R for details
+      .robust.loocv(A, pseudo.out, h, b, eval.pt=eval.pts,
+                    kernel.type=kernel.type)}, bw.seq.h, bw.seq.b)
+    h.opt <- bw.seq.h[which.min(risk)]
+    b.opt <- bw.seq.b[which.min(risk)]
+  }
+  else if(control$bandwidth.method == "LOOCV(h=b)"){
+    if (is.null(control$bw.seq)){
+      bw.seq <- seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 50)
+    }
+    else{
+      bw.seq <- control$bw.seq
+    }
+    risk <- mapply(function(h, b){
+      # See bandwidth.R for details
+      .robust.loocv(A, pseudo.out, h, b, eval.pt=eval.pts,
+                    kernel.type=kernel.type)}, bw.seq, bw.seq)
+    h.opt <- bw.seq[which.min(risk)]
+    b.opt <- bw.seq[which.min(risk)]
+  }
+  else{
+    # lpbwselect is implemented by nprobust library.
+    # This bandwidth selection algorithm optimizes for the (estimate of)
+    # integrated MSE.
+    h.opt <- lpbwselect(pseudo.out, A, eval=eval.pts,
+                        bwselect="imse-dpi")$bws[,2]
+    h.opt <- as.numeric(h.opt)
+    b.opt <- h.opt
+  }
+  c(h.opt, b.opt)
+}

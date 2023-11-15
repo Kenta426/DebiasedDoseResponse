@@ -21,7 +21,6 @@ n <- 500; cols <- 3
 W <- matrix(runif(n*cols), ncol = cols)   # a 200 * 3 matrix of covariates
 A <- rnorm(n, mean=W%*%rnorm(cols))       # a 200 * 1 vector of treatment variable
 Y <- rnorm(n, mean = sin(2*A)+W[,1])      # a 200 * 1 vector of response variable
-
 est.res <- debiased_inference(Y, A, W)    # compute debiased local linear 
 p <- plot_debiased_curve(est.res)         # plot debiased local linear 
 

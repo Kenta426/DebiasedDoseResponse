@@ -66,19 +66,22 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   # nuisance functions as the optional argument otherwise this code will fit
   # SuperLearner every time.
   if(is.null(control$mu)){
+    if(control$verbose) message("Fitting outcome regression")
     mu <- .fit.regression(Y, A, W)  # See fit_nuisances.R for details
   }
   else{
     mu <- control$mu
   }
-  if(is.null(control$mu)){
-    g <- .fit.density(A, W) # See fit_nuisances.R for details
+  if(is.null(control$g)){
+    if(control$verbose) message("Fitting conditional density")
+    g <- .fit.semiparametric.density(A, W) # See fit_nuisances.R for details
   }
   else{
     g <- control$g
   }
 
   # Compute an estimated pseudo-outcome sequence ------------------------------
+  if(control$verbose) message("Computing pseudo outcomes")
   ord <- order(A)
   Y <- Y[ord]; W <- W[ord,]; A <- A[ord]; n <- length(A)
   pseudo.res <- .pseudo.outcomes(Y, A, W, mu, g)  # See helper.R for details
@@ -91,56 +94,23 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   }
 
   # Compute bandwidth ---------------------------------------------------------
-  # Use so-called "Hat matrix trick" of a linear smoother to run leave-one-out
-  # Cross-validation in linear time
-  if(control$bandwidth.method == "LOOCV"){
-    if (is.null(control$bw.seq)){
-      bw.seq <- seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)
-    }
-    else{
-      bw.seq <- control$bw.seq
-    }
-    bw.seq.h <- rep(bw.seq, length(bw.seq))
-    bw.seq.b <- rep(bw.seq, each=length(bw.seq))
-    risk <- mapply(function(h, b){
-      # See bandwidth.R for details
-      .robust.loocv(A, pseudo.out, h, b, eval.pt=eval.pts,
-                    kernel.type=kernel.type)}, bw.seq.h, bw.seq.b)
-    h.opt <- bw.seq.h[which.min(risk)]
-    b.opt <- bw.seq.b[which.min(risk)]
-  }
-  else if(control$bandwidth.method == "LOOCV(h=b)"){
-    if (is.null(control$bw.seq)){
-      bw.seq <- seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 50)
-    }
-    else{
-      bw.seq <- control$bw.seq
-    }
-    risk <- mapply(function(h, b){
-      # See bandwidth.R for details
-      .robust.loocv(A, pseudo.out, h, b, eval.pt=eval.pts,
-                    kernel.type=kernel.type)}, bw.seq, bw.seq)
-    h.opt <- bw.seq[which.min(risk)]
-    b.opt <- bw.seq[which.min(risk)]
-  }
-  else{
-    # lpbwselect is implemented by nprobust library.
-    # This bandwidth selection algorithm optimizes for the (estimate of)
-    # integrated MSE.
-    h.opt <- lpbwselect(pseudo.out, A, eval=eval.pts,
-                                  bwselect="imse-dpi")$bws[,2]
-    b.opt <- h.opt/tau
-  }
+  # See bandwidth.R for details. The default method is "Plug-in" from the
+  # original paper
+  if(control$verbose) message("Selecting bandwidth")
+  bandwidth <- .bandwidth.selection(pseudo.out, A, eval.pts, control)
+  h.opt <- bandwidth[1]; b.opt <- bandwidth[2]
 
   # Fit debiased local linear regression --------------------------------------
   # See local_polynomial.R for details
-  est.res <- .lprobust(A, pseudo.out, h.opt, b.opt,
+  if(control$verbose) message("Fitting debiased local linear regression")
+  est.res <- .lprobust.quad(A, pseudo.out, h.opt, b.opt,
                        eval=eval.pts, kernel.type=kernel.type)
 
   # Estimate influence function sequence --------------------------------------
+  if(control$verbose) message("Estimating EIF")
   rinf.fns <- mapply(function(a, h.val, b.val){
     # See influence_functions.R for details
-    .compute.rinfl.func(pseudo.out, A, a, h.val, b.val, kern,
+    .compute.rinfl.func.quad(pseudo.out, A, a, h.val, b.val, kern,
                         muhat.mat, mhat.obs)
   }, eval.pts, h.opt, b.opt)
   rif.se <- apply(rinf.fns, 2, sd)/sqrt(n)
@@ -150,6 +120,7 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
 
   # Compute uniform bands by simulating GP ------------------------------------
   if(control$unif){
+    if(control$verbose) message("Computing uniform bands by bootstrap")
     get.unif.ep <- function(alpha){
       std.inf.vals <- scale(rinf.fns)
       boot.samples <- control$bootstrap
@@ -314,18 +285,18 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
 
   # Fit debiased local linear regression --------------------------------------
   # See local_polynomial.R for details
-  est.res.1 <- .lprobust(A, pseudo.out, h.opt, b.opt,
+  est.res.1 <- .lprobust.quad(A, pseudo.out, h.opt, b.opt,
                          eval=eval.pts.1, kernel.type=kernel.type)
-  est.res.2 <- .lprobust(A, pseudo.out, h.opt, b.opt,
+  est.res.2 <- .lprobust.quad(A, pseudo.out, h.opt, b.opt,
                          eval=eval.pts.2, kernel.type=kernel.type)
 
   # Estimate influence function sequence --------------------------------------
   kern <- function(t){.kern(t, kernel=kernel.type)}
   inf.cov <- mapply(function(a1.val, a2.val, h.val, b.val){
     # See influence_functions.R for details
-    .compute.rinfl.func(pseudo.out, A, a1.val, h.val, b.val,
+    .compute.rinfl.func.quad(pseudo.out, A, a1.val, h.val, b.val,
                        kern, muhat.mat, mhat.obs)-
-      .compute.rinfl.func(pseudo.out, A, a2.val, h.val, b.val,
+      .compute.rinfl.func.quad(pseudo.out, A, a2.val, h.val, b.val,
                          kern, muhat.mat, mhat.obs)
   }, eval.pts.1, eval.pts.2, h.opt, b.opt)
   se.cov <- apply(inf.cov, 2, sd)/sqrt(n)

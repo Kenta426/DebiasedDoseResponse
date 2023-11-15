@@ -66,6 +66,12 @@
   else{
     bootstrap <- option$bootstrap
   }
+  if (is.null(option$verbose)){
+    verbose <- TRUE
+  }
+  else{
+    verbose <- option$verbose
+  }
   arg$kernel.type <- kernel.type
   arg$bandwidth.method <- bandwidth.method
   arg$alpha.pts <- alpha.pts
@@ -75,6 +81,7 @@
   arg$bootstrap <- bootstrap
   arg$mu <- option$mu
   arg$g <- option$g
+  arg$verbose <- verbose
   return(arg)
 }
 

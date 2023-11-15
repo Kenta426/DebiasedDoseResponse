@@ -114,7 +114,7 @@ CD.SuperLearner <- function(X, W, SL.library, n.folds=10,
     }
   }
 
-  cat("full data... ")
+  if(verbose) cat("full data... ")
   mean.model <- SuperLearner(Y=X, X=W, SL.library = SL.library,
                              family='gaussian', method="method.NNLS")
   mean.preds <- mean.model$SL.predict
