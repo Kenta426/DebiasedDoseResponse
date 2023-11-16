@@ -2,8 +2,13 @@
 % Please edit documentation in R/debiased_regression.R
 \name{debiased_inference}
 \alias{debiased_inference}
-\title{Compute debiased nonparametric inference for a covariate-adjusted regression
-function.}
+\title{Title: debiased_inference
+This function performs nonparametric inference on the causal dose-response
+curve associated with continuous exposure. It performs both
+pointwise and uniform inference. The resulting confidence intervals and
+confidence bands attain asymptotically valid coverage without undersmoothing
+subject to technical conditions.
+See the accompanying paper for details.}
 \usage{
 debiased_inference(Y, A, W, tau = 1, eval.pts = NULL, ...)
 }
@@ -25,6 +30,7 @@ equi-distant points from the 5th and 95th percentile of the exposure values}
 
 }
 \description{
+Title: debiased_inference
 This function performs nonparametric inference on the causal dose-response
 curve associated with continuous exposure. It performs both
 pointwise and uniform inference. The resulting confidence intervals and
@@ -48,10 +54,6 @@ Is must be one of the following: \code{DPI} (Direct Plug-in),
 The default is \code{DPI}.}
 \item{\code{alpha.pts}}{The alpha value for the point-wise confidence
 intervals. The default value is 0.05.}
-\item{\code{unif}}{If TRUE, the function performs uniform inference.
-The default value is TRUE.}
-\item{\code{alpha.unif}}{The alpha value for the uniform confidence bands.
-The default value is 0.05.}
 \item{\code{bw.seq}}{The set of bandwidth parameters to choose from. Only
 used when \code{bandwidth.method} is \code{LOOCV} or \code{LOOCV(h=b)}.
 The default value is \code{seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)} for
@@ -59,6 +61,8 @@ The default value is \code{seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)} for
 \code{LOOCV(h=b)}}
 \item{\code{bootstrap}}{The number of bootstrap samples used to simulate
 Gaussian Process in the uniform bands. The default value is 1e4.}
+\item{\code{verbose}}{If TRUE, messages will be displayed while running
+the code. The default value is TRUE.}
 }
 }
 \examples{

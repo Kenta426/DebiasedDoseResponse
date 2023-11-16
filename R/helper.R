@@ -1,4 +1,4 @@
-# Helper function for generating pseudo-outcomes
+# compute pseudo-outcomes
 .pseudo.outcomes <- function(y, a, w, mu, g){
   n <- length(a)
   W.new <- data.frame(w[rep(1:n, n), ])
@@ -86,16 +86,22 @@
 }
 
 
-#' Title
+#' Title: plot_debiased_curve
 #'
-#' @param res.df
-#' @param ci
-#' @param unif
+#' @param res.df output from debiased_inference
+#' @param ci TRUE if point-wise CIs are displayed. Default is TRUE
+#' @param unif TRUE if uniform bands are displayed. Default is TRUE
 #'
 #' @return
 #' @export
 #' @import ggplot2
 #' @examples
+#' n <- 200; cols <- 3
+#' W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
+#' A <- rnorm(n, mean=W%*%rnorm(cols))   # 200 * 1 vector of treatment variable
+#' Y <- rnorm(n, mean=sin(A)+W%*%rnorm(cols))  # 200 * 1 vector of response
+#' res <- debiased_inference(Y, A, W)
+#' plot_debiased_curve(res)
 plot_debiased_curve <- function(res.df, ci=TRUE, unif=TRUE){
   p <- ggplot2::ggplot(res.df) +
     ggplot2::geom_line(aes(x=eval.pts, y=theta)) +
@@ -122,5 +128,3 @@ plot_debiased_curve <- function(res.df, ci=TRUE, unif=TRUE){
   p <- p + ggplot2::theme(legend.position = "bottom")
   return(p)
 }
-
-

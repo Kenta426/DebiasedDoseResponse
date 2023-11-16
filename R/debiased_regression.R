@@ -1,6 +1,14 @@
-#' Compute debiased nonparametric inference for a covariate-adjusted regression
-#' function.
-#'
+# File: debiased_regression.R
+# Author: Kenta Takatsu
+# Description:
+#   Two functions in this file corresponds to the main inferential methods for
+#   covariated-adjusted regression and covariates-adjusted ATE for continuous
+#   treatment
+# References:
+#   Takatsu K., and Westling T., (2023).
+#   "Debiased inference for a covariate-adjusted regression function"
+
+#' Title: debiased_inference
 #' This function performs nonparametric inference on the causal dose-response
 #' curve associated with continuous exposure. It performs both
 #' pointwise and uniform inference. The resulting confidence intervals and
@@ -30,10 +38,6 @@
 #'   The default is \code{DPI}.}
 #'   \item{\code{alpha.pts}}{The alpha value for the point-wise confidence
 #'   intervals. The default value is 0.05.}
-#'   \item{\code{unif}}{If TRUE, the function performs uniform inference.
-#'   The default value is TRUE.}
-#'   \item{\code{alpha.unif}}{The alpha value for the uniform confidence bands.
-#'   The default value is 0.05.}
 #'   \item{\code{bw.seq}}{The set of bandwidth parameters to choose from. Only
 #'   used when \code{bandwidth.method} is \code{LOOCV} or \code{LOOCV(h=b)}.
 #'   The default value is `seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)` for
@@ -41,6 +45,8 @@
 #'   \code{LOOCV(h=b)}}
 #'   \item{\code{bootstrap}}{The number of bootstrap samples used to simulate
 #'   Gaussian Process in the uniform bands. The default value is 1e4.}
+#'   \item{\code{verbose}}{If TRUE, messages will be displayed while running
+#'   the code. The default value is TRUE.}
 #'}
 #' @return
 #'
@@ -59,7 +65,6 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   # Parse control inputs ------------------------------------------------------
   control <- .parse.debiased_inference(...)
   kernel.type <- control$kernel.type
-
   # Compute a nuisance estimators if not provided -----------------------------
   # This is the most time consuming component of the entire algorithm.
   # When sample size or dimension of W is large, it is recommended to specify
@@ -79,7 +84,6 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   else{
     g <- control$g
   }
-
   # Compute an estimated pseudo-outcome sequence ------------------------------
   if(control$verbose) message("Computing pseudo outcomes")
   ord <- order(A)
@@ -92,20 +96,17 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   if (is.null(eval.pts)){
     eval.pts <- seq(quantile(A, 0.05), quantile(A, 0.95),  length.out=30)
   }
-
   # Compute bandwidth ---------------------------------------------------------
   # See bandwidth.R for details. The default method is "Plug-in" from the
   # original paper
   if(control$verbose) message("Selecting bandwidth")
   bandwidth <- .bandwidth.selection(pseudo.out, A, eval.pts, control)
-  h.opt <- bandwidth[1]; b.opt <- bandwidth[2]
-
+  h.opt <- bandwidth[1]; b.opt <- h.opt/tau
   # Fit debiased local linear regression --------------------------------------
   # See local_polynomial.R for details
   if(control$verbose) message("Fitting debiased local linear regression")
   est.res <- .lprobust.quad(A, pseudo.out, h.opt, b.opt,
                        eval=eval.pts, kernel.type=kernel.type)
-
   # Estimate influence function sequence --------------------------------------
   if(control$verbose) message("Estimating EIF")
   rinf.fns <- mapply(function(a, h.val, b.val){
@@ -117,7 +118,6 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   alpha <- control$alpha.pts
   ci.ll.p <- est.res[,"theta.hat"]-qnorm(1-alpha/2)*rif.se
   ci.ul.p <- est.res[,"theta.hat"]+qnorm(1-alpha/2)*rif.se
-
   # Compute uniform bands by simulating GP ------------------------------------
   if(control$unif){
     if(control$verbose) message("Computing uniform bands by bootstrap")
@@ -136,7 +136,6 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   else{
     ci.ll.u <- ci.ul.u <- 0
   }
-
   # Output data.frame ---------------------------------------------------------
   res <- data.frame(
     eval.pts=eval.pts,
@@ -152,6 +151,7 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
   return(res)
 }
 
+#' #' Title: debiased_ate_inference
 #' Compute debiased nonparametric inference for the difference of
 #' covariate-adjusted regression function values.
 #'
@@ -193,6 +193,8 @@ debiased_inference <- function(Y, A, W, tau=1, eval.pts=NULL, ...){
 #'   The default value is `seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)` for
 #'   \code{LOOCV} and `seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 50)` for
 #'   \code{LOOCV(h=b)}}
+#'   \item{\code{verbose}}{If TRUE, messages will be displayed while running
+#'   the code. The default value is TRUE.}
 #'}
 #' @return
 #' @export
@@ -220,78 +222,47 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
   if (length(eval.pts.2) == 1){
     eval.pts.2 <- rep(eval.pts.2, length(eval.pts.1))
   }
-
   # Compute a nuisance estimators if not provided -----------------------------
   if(is.null(control$mu)){
+    if(control$verbose) message("Fitting outcome regression")
     mu <- .fit.regression(Y, A, W) # See fit_nuisances.R for details
   }
   else{
     mu <- control$mu
   }
-  if(is.null(control$mu)){
-    g <- .fit.density(A, W) # See fit_nuisances.R for details
+  if(is.null(control$g)){
+    if(control$verbose) message("Fitting conditional density")
+    g <- .fit.semiparametric.density(A, W) # See fit_nuisances.R for details
   }
   else{
     g <- control$g
   }
-
   # Estimate pseudo-outcome sequence ------------------------------------------
+  if(control$verbose) message("Computing pseudo outcomes")
   ord <- order(A)
   Y <- Y[ord]; W <- W[ord,]; A <- A[ord]; n <- length(A)
   pseudo.res <- .pseudo.outcomes(Y, A, W, mu, g) # See helper.R for details
   pseudo.out <- pseudo.res$pseudo.outcome
   muhat.mat <- pseudo.res$muhat.mat
   mhat.obs <- pseudo.res$mhat.obs
-
   # Compute bandwidth ---------------------------------------------------------
   bw.eval <- unique(c(eval.pts.1, eval.pts.2))
   ord <- order(bw.eval); bw.eval <- bw.eval[ord]
-  if(control$bandwidth.method == "LOOCV"){
-    if (is.null(control$bw.seq)){
-      bw.seq <- seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)
-    }
-    else{
-      bw.seq <- control$bw.seq
-    }
-    bw.seq.h <- rep(bw.seq, length(bw.seq))
-    bw.seq.b <- rep(bw.seq, each=length(bw.seq))
-    risk <- mapply(function(h, b){
-      # See bandwidth.R for details
-      .robust.loocv(A, pseudo.out, h, b, eval.pt=bw.eval,
-                    kernel.type=kernel.type)}, bw.seq.h, bw.seq.b)
-    h.opt <- bw.seq.h[which.min(risk)]; b.opt <- bw.seq.b[which.min(risk)]
-  }
-  else if(control$bandwidth.method == "LOOCV(h=b)"){
-    if (is.null(control$bw.seq)){
-      bw.seq <- seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 50)
-    }
-    else{
-      bw.seq <- control$bw.seq
-    }
-    risk <- mapply(function(h, b){
-      # See bandwidth.R for details
-      .robust.loocv(A, pseudo.out, h, b, eval.pt=bw.eval,
-                    kernel.type=kernel.type)}, bw.seq, bw.seq)
-    h.opt <- bw.seq[which.min(risk)]; b.opt <- bw.seq[which.min(risk)]
-  }
-  else{
-    # lpbwselect is implemented by nprobust library.
-    # This bandwidth selection algorithm optimizes for the (estimate of)
-    # integrated MSE.
-    h.opt <- lpbwselect(pseudo.out, A, eval=bw.eval,
-                        bwselect="imse-dpi")$bws[,2]
-    b.opt <- h.opt/tau
-  }
-
+  # See bandwidth.R for details. The default method is "Plug-in" from the
+  # original paper
+  if(control$verbose) message("Selecting bandwidth")
+  bandwidth <- .bandwidth.selection(pseudo.out, A, bw.eval, control)
+  h.opt <- bandwidth[1]; b.opt <- h.opt/tau
   # Fit debiased local linear regression --------------------------------------
   # See local_polynomial.R for details
+  if(control$verbose) message("Fitting debiased local linear regression")
   est.res.1 <- .lprobust.quad(A, pseudo.out, h.opt, b.opt,
                          eval=eval.pts.1, kernel.type=kernel.type)
   est.res.2 <- .lprobust.quad(A, pseudo.out, h.opt, b.opt,
                          eval=eval.pts.2, kernel.type=kernel.type)
-
   # Estimate influence function sequence --------------------------------------
   kern <- function(t){.kern(t, kernel=kernel.type)}
+  if(control$verbose) message("Estimating EIF")
   inf.cov <- mapply(function(a1.val, a2.val, h.val, b.val){
     # See influence_functions.R for details
     .compute.rinfl.func.quad(pseudo.out, A, a1.val, h.val, b.val,
@@ -305,7 +276,6 @@ debiased_ate_inference <- function(Y, A, W, tau=1,
     qnorm(1-alpha/2)*se.cov
   ci.ul.p <- (est.res.1[,"theta.hat"]-est.res.2[,"theta.hat"])+
     qnorm(1-alpha/2)*se.cov
-
   # Output data.frame ---------------------------------------------------------
   res <- data.frame(
     eval.pts.1=eval.pts.1,

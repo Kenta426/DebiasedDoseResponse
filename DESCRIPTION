@@ -20,4 +20,5 @@ Imports:
   ranger,
   Rsolnp,
   nnls,
-  ggplot2
+  ggplot2,
+  glmnet

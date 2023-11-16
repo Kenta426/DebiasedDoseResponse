@@ -2,16 +2,28 @@
 % Please edit documentation in R/helper.R
 \name{plot_debiased_curve}
 \alias{plot_debiased_curve}
-\title{Title}
+\title{Title: plot_debiased_curve}
 \usage{
 plot_debiased_curve(res.df, ci = TRUE, unif = TRUE)
 }
 \arguments{
-\item{unif}{}
+\item{res.df}{output from debiased_inference}
+
+\item{ci}{TRUE if point-wise CIs are displayed. Default is TRUE}
+
+\item{unif}{TRUE if uniform bands are displayed. Default is TRUE}
 }
 \value{
 
 }
 \description{
-Title
+Title: plot_debiased_curve
+}
+\examples{
+n <- 200; cols <- 3
+W <- matrix(runif(n*cols), ncol=cols) # 200 * 3 matrix of covariates
+A <- rnorm(n, mean=W\%*\%rnorm(cols))   # 200 * 1 vector of treatment variable
+Y <- rnorm(n, mean=sin(A)+W\%*\%rnorm(cols))  # 200 * 1 vector of response
+res <- debiased_inference(Y, A, W)
+plot_debiased_curve(res)
 }

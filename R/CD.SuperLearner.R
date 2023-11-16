@@ -4,7 +4,9 @@
 # The functions in this file implement super-learning of a conditional density
 # based on a user-specified library of estimators. The methods are based in part on:
 #
-# D?az Munoz, Ivan, and Mark J. van der Laan. "Super learner based conditional density estimation with application to marginal structural models." The international journal of biostatistics 7.1 (2011): 1-20
+# D?az Munoz, Ivan, and Mark J. van der Laan. "Super learner based conditional density
+# estimation with application to marginal structural models."
+# The international journal of biostatistics 7.1 (2011): 1-20
 #
 # Author: tedwestling
 ###############################################################################

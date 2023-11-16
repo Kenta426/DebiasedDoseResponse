@@ -2,7 +2,8 @@
 % Please edit documentation in R/debiased_regression.R
 \name{debiased_ate_inference}
 \alias{debiased_ate_inference}
-\title{Compute debiased nonparametric inference for the difference of
+\title{#' Title: debiased_ate_inference
+Compute debiased nonparametric inference for the difference of
 covariate-adjusted regression function values.}
 \usage{
 debiased_ate_inference(
@@ -66,6 +67,8 @@ used when \code{bandwidth.method} is \code{LOOCV} or \code{LOOCV(h=b)}.
 The default value is \code{seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 10)} for
 \code{LOOCV} and \code{seq(0.1*n^{-1/5}, 1*n^{-1/5}, length.out = 50)} for
 \code{LOOCV(h=b)}}
+\item{\code{verbose}}{If TRUE, messages will be displayed while running
+the code. The default value is TRUE.}
 }
 }
 \examples{

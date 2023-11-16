@@ -18,9 +18,9 @@ library(DebiasedDoseResponse)
 library(ggplot2)
 
 n <- 500; cols <- 3
-W <- matrix(runif(n*cols), ncol = cols)   # a 200 * 3 matrix of covariates
-A <- rnorm(n, mean=W%*%rnorm(cols))       # a 200 * 1 vector of treatment variable
-Y <- rnorm(n, mean = sin(2*A)+W[,1])      # a 200 * 1 vector of response variable
+W <- matrix(runif(n*cols), ncol = cols)   # a 500 * 3 matrix of covariates
+A <- rnorm(n, mean=W%*%rnorm(cols))       # a 500 * 1 vector of treatment variable
+Y <- rnorm(n, mean = sin(2*A)+W[,1])      # a 500 * 1 vector of response variable
 est.res <- debiased_inference(Y, A, W)    # compute debiased local linear 
 p <- plot_debiased_curve(est.res)         # plot debiased local linear 
 
@@ -57,4 +57,23 @@ p + geom_line(aes(x=eval.pts, y=g(eval.pts)), color="coral")
   <img src="https://github.com/Kenta426/DebiasedDoseResponse/blob/main/figs/demo2.png" />
 </p>
 
+## Recommendation
+For large data, it is recommended to compute outcome regression and standardized
+density separately. The example is provided below. This avoids computing nuisance 
+estimators every time.
+```r
+set.seed(10000)
+library(DebiasedDoseResponse)
+library(ggplot2)
+
+n <- 500; cols <- 3
+W <- matrix(runif(n*cols), ncol = cols)   # a 500 * 3 matrix of covariates
+A <- rnorm(n, mean=W%*%rnorm(cols))       # a 500 * 1 vector of treatment variable
+Y <- rnorm(n, mean = sin(2*A)+W[,1])      # a 500 * 1 vector of response variable
+
+mu.hat <- .fit.regression(Y, A, W)         # fit outcome regression 
+g.hat <- .fit.semiparametric.density(A, W) # fit standardized propensity  
+
+est.res <- debiased_inference(Y, A, W, mu=mu.hat, g=g.hat)    # compute debiased local linear 
+```
 
