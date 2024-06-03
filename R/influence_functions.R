@@ -52,7 +52,7 @@
   term2 <- (w.1.tilde %*% solve(Dh))[,1]
   deriv2 <- (solve(Db) %*%
                crossprod(cbind(1, a.std.b, a.std.b^2)*kern.std.b, Y)/n)[3,]
-  if.c2 <- h^2/2 * deriv2 *(term2-term1)
+  if.c2 <- (h/b)^2 * deriv2 *(term2-term1)
   # Integral terms in EIF -----------------------------------------------------
   int1.h <- colMeans(kern.std.h * (mu.hat - theta.hat))
   int2.h <- colMeans(a.std.h * kern.std.h * (mu.hat - theta.hat))
